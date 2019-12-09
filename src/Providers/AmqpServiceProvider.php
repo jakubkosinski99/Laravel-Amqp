@@ -4,6 +4,7 @@ namespace Kosinski\Amqp\Providers;
 
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Illuminate\Support\ServiceProvider;
+use Kosinski\Amqp\Amqp;
 use Kosinski\Amqp\Annotations\AmqpProperty;
 use Kosinski\Amqp\Annotations\PropertyAccessor;
 use Kosinski\Amqp\Console\Commands\QueueListenCommand;
@@ -11,8 +12,8 @@ use Kosinski\Amqp\Console\Commands\QueueListenCommand;
 class AmqpServiceProvider extends ServiceProvider
 {
 
-    public $bindings = [
-        'amqp' => Amqp::class
+    public array $singletons = [
+        'amqp' => Amqp::class,
     ];
 
     public function boot() {
