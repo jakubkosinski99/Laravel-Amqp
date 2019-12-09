@@ -1,6 +1,6 @@
 <?php
 
-namespace Kosinski\Amqp;
+namespace Kosinski\Amqp\Providers;
 
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Illuminate\Support\ServiceProvider;

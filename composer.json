@@ -16,5 +16,17 @@
             "name": "Jakub Kosiński",
             "email": "jakub.kosinski.99@gmail.com"
         }
-    ]
+    ],
+    "autoload": {
+        "psr-4": {
+            "Kosinski\\Amqp\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Kosinski\\Amqp\\Providers\\AmqpServiceProvider"
+            ]
+        }
+    }
 }
