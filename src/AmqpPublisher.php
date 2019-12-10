@@ -32,8 +32,7 @@ class AmqpPublisher extends AmqpConnection
     public function publish(): AmqpConnection
     {
         $this->getChannel()->basic_publish(
-            new AMQPMessage(
-                $this->getAmqpSupport()->produce()),
+            new AMQPMessage($this->getAmqpSupport()->produce(), ['content_type' => 'text/plain', 'delivery_mode' => 2]),
                 $this->getInformationCollector()->getProperty(InformationAccessors::EXCHANGE(), 'exchange'),
                 $this->getAmqpSupport()->getRouting()
             );
