@@ -75,8 +75,6 @@ class AmqpConsumer extends AmqpConnection
         return function($message) use ($connection) {
             $connection->getAmqpSupport()->setMessage($message)->setConnection($connection);
 
-            event(new MessageConsumingEvent($connection->getAmqpSupport()));
-
             $connection->getAmqpSupport()->consume();
         };
     }
