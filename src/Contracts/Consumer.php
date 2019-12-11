@@ -17,11 +17,6 @@ abstract class Consumer extends AmqpSupport implements Consumable
      */
     protected AMQPMessage $message;
 
-    /**
-     * @var AmqpConnection
-     */
-    protected AmqpConnection $connection;
-
     abstract public function consume(): void;
 
     public function acknowledge(): void
@@ -47,25 +42,16 @@ abstract class Consumer extends AmqpSupport implements Consumable
     }
 
     /**
-     * @throws ConsumerInvalidConnectionException
      * @throws ConsumerInvalidMessageException
      */
     private function checkProperties() {
         if(!$this->message instanceof AMQPMessage) {
             throw new ConsumerInvalidMessageException;
         }
-
-        if(!$this->connection instanceof AmqpConnection) throw new ConsumerInvalidConnectionException();
     }
 
     public function setMessage(AMQPMessage $message): Consumer {
         $this->message = $message;
-
-        return $this;
-    }
-
-    public function setConnection(AmqpConnection $connection): Consumer {
-        $this->connection = $connection;
 
         return $this;
     }

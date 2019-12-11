@@ -8,8 +8,10 @@ use Kosinski\Amqp\Contracts\Consumer;
 use Kosinski\Amqp\Events\MessageConsumingEvent;
 use Kosinski\Amqp\Exceptions\ConsumerShouldStopException;
 use Kosinski\Amqp\Support\InformationAccessors;
+use PhpAmqpLib\Exception\AMQPHeartbeatMissedException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Kosinski\Amqp\Exceptions\ClassPropertyAccessorNotFound;
+use PhpAmqpLib\Message\AMQPMessage;
 
 /**
  * Class AmqpConsumer
@@ -37,8 +39,6 @@ class AmqpConsumer extends AmqpConnection
     public function consume(): AmqpConnection
     {
         try {
-
-
             if ($this->queueSize() === 0 && !$this->getInformationCollector()->getProperty(InformationAccessors::CONNECTION(), 'persistent')) {
                 throw new ConsumerShouldStopException();
             }
@@ -53,13 +53,11 @@ class AmqpConsumer extends AmqpConnection
                 $this->consumeCallback()
             );
 
-            while (count($this->getChannel()->callbacks) || !$this->getInformationCollector()->getProperty(InformationAccessors::CONSUMER(), 'autoStopConsume')) {
-                $this->getChannel()->wait(
-                    null,
-                    false,
-                    $this->getInformationCollector()->getProperty(InformationAccessors::CONNECTION(), 'timeout', 0));
+            while (count($this->getChannel()->callbacks)) {
+                $this->wait();
             }
-        } catch (AMQPTimeoutException | ConsumerShouldStopException $exception) {
+
+        } catch (ConsumerShouldStopException | AMQPTimeoutException $exception) {
             return $this;
         } catch (Exception $exception) {
             throw $exception;
@@ -68,14 +66,22 @@ class AmqpConsumer extends AmqpConnection
         return $this;
     }
 
+    /**
+     * @throws \ErrorException
+     */
+    private function wait(): void {
+        $this->getChannel()->wait(null, false, $this->getInformationCollector()->getProperty(InformationAccessors::CONNECTION(), 'timeout', 0));
+    }
+
+    /**
+     * @return \Closure
+     */
     private function consumeCallback()
     {
         $connection = $this;
 
         return function($message) use ($connection) {
-            $connection->getAmqpSupport()->setMessage($message)->setConnection($connection);
-
-            $connection->getAmqpSupport()->consume();
+            $connection->getAmqpSupport()->setMessage($message)->consume();
         };
     }
 

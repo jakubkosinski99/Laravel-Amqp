@@ -7,6 +7,7 @@ use Kosinski\Amqp\Events\MessageAcknowledgeEvent;
 use Kosinski\Amqp\Events\MessageConsumingEvent;
 use Kosinski\Amqp\Events\MessageRejectEvent;
 use Kosinski\Amqp\Facades\Amqp;
+use PhpAmqpLib\Exception\AMQPHeartbeatMissedException;
 
 class QueueListenCommand extends Command
 {
@@ -15,31 +16,39 @@ class QueueListenCommand extends Command
 
     public function handle()
     {
-            $this->info('Listening for messages in '.$this->argument('queue').' queue.');
-            $this->listenForEvents();
-            while (true) {
-                try {
-                    Amqp::consume($this->argument('queue'), [
-                        'consumer' => [
-                            'autoStopConsume' => false
-                        ]
-                    ], true);
-                } catch (\Exception $exception) {
-                    $this->error($exception->getMessage());
+        $this->info('Listening for messages in ' . $this->argument('queue') . ' queue.');
+        $this->listenForEvents();
+
+        while (true) {
+            try {
+                Amqp::consume(
+                    $this->argument('queue'), [
+                    'connection' => [
+                        'persistent' => true,
+                    ],
+                    'consumer' => [
+                        'autoStopConsume' => false,
+                    ],
+                ], true);
+            } catch (\Exception $exception) {
+                if($exception instanceof AMQPHeartbeatMissedException) {
+                    continue;
                 }
+
+                $this->error($exception->getMessage());
             }
+        }
     }
 
-    private function listenForEvents() {
-        $this->laravel['events']->listen(MessageConsumingEvent::class, function ($event) {
-            $this->info('Consuming');
-        });
-
-        $this->laravel['events']->listen(MessageAcknowledgeEvent::class, function ($event) {
+    private function listenForEvents()
+    {
+        $this->laravel['events']->listen(
+            MessageAcknowledgeEvent::class, function($event) {
             $this->info('Consumed');
         });
 
-        $this->laravel['events']->listen(MessageRejectEvent::class, function ($event) {
+        $this->laravel['events']->listen(
+            MessageRejectEvent::class, function($event) {
             $this->error('Rejected');
         });
     }
